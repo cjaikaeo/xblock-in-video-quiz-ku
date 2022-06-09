@@ -84,12 +84,14 @@ class InVideoQuizXBlock(StudioEditableXBlockMixin, XBlock):
             field_info = self._make_field_info(field_name, field)
             if field_name == "video_id":
                 # retrieve all video components under the same parent
-                field_info['video_ids'] = [s.scope_ids.usage_id.block_id
+                field_info['video_ids'] = [
+                    u'{} [{}]'.format(s.scope_ids.usage_id.block_id, s.get_content_titles()[0])
                     for s in siblings
                     if s.scope_ids.usage_id.block_type == 'video']
             elif field_name == "timemap":
                 # retrieve all problem components under the same parent
-                field_info['problem_ids'] = [s.scope_ids.usage_id.block_id
+                field_info['problem_ids'] = [
+                    u'{} [{}]'.format(s.scope_ids.usage_id.block_id, s.get_content_titles()[0])
                     for s in siblings
                     if s.scope_ids.usage_id.block_type == 'problem']
             if field_info is not None:
