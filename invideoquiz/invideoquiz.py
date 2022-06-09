@@ -10,10 +10,13 @@ from xblock.core import XBlock
 from xblock.fields import Scope
 from xblock.fields import String
 from xblock.fragment import Fragment
-from xblockutils.studio_editable import StudioEditableXBlockMixin
+from xblockutils.studio_editable import StudioEditableXBlockMixin, loader as utils_loader
+from xblockutils.resources import ResourceLoader
 
 from .utils import _
 
+
+loader = ResourceLoader(__name__)
 
 def get_resource_string(path):
     """
@@ -64,6 +67,37 @@ class InVideoQuizXBlock(StudioEditableXBlockMixin, XBlock):
         'video_id',
         'timemap',
     ]
+
+    # We need to override studio_view to avoid double rendering
+    def studio_view(self, context=None):
+        fragment = Fragment()
+        context = {'fields': []}
+        siblings = self.get_parent().get_children()
+        # Build a list of all the fields that can be edited:
+        for field_name in self.editable_fields:
+            field = self.fields[field_name]
+            assert field.scope in (Scope.content, Scope.settings), (
+                "Only Scope.content or Scope.settings fields can be used with "
+                "StudioEditableXBlockMixin. Other scopes are for user-specific data and are "
+                "not generally created/configured by content authors in Studio."
+            )
+            field_info = self._make_field_info(field_name, field)
+            if field_name == "video_id":
+                # retrieve all video components under the same parent
+                field_info['video_ids'] = [s.scope_ids.usage_id.block_id
+                    for s in siblings
+                    if s.scope_ids.usage_id.block_type == 'video']
+            elif field_name == "timemap":
+                # retrieve all problem components under the same parent
+                field_info['problem_ids'] = [s.scope_ids.usage_id.block_id
+                    for s in siblings
+                    if s.scope_ids.usage_id.block_type == 'problem']
+            if field_info is not None:
+                context["fields"].append(field_info)
+        fragment.content = loader.render_template('templates/invideoquiz_edit.html', context)
+        fragment.add_javascript(utils_loader.load_unicode('public/studio_edit.js'))
+        fragment.initialize_js('StudioEditableXBlockMixin')
+        return fragment
 
     # Decorate the view in order to support multiple devices e.g. mobile
     # See: https://openedx.atlassian.net/wiki/display/MA/Course+Blocks+API
