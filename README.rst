@@ -1,7 +1,7 @@
 In Video Quiz XBlock |BS| |CA|
 ==============================
 
-This XBlock allows for edX components to be displayed to users inside of videos at specific time points.
+This XBlock allows for edX components to be displayed to users inside of videos at specific time points.  It has been customized from the original by adding a list of videos and problems on the edit page.
 
 Installation
 ------------
